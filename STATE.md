@@ -17,7 +17,7 @@
 | D1 | CSV 캐시 | DONE | 0 | - | |
 | D2 | yfinance 페처 (4y) | DONE | 0 | - | |
 | D3 | ccxt 페처 (페이지네이션) | DONE | 0 | - | |
-| D4 | 테스트 픽스처 | PENDING | 0 | - | |
+| D4 | 테스트 픽스처 | DONE | 0 | - | |
 | I1 | RSI | PENDING | 0 | - | |
 | I2 | Stoch+W%R | PENDING | 0 | - | |
 | I3 | %B+CCI+이격도20 | PENDING | 0 | - | |
@@ -47,6 +47,7 @@
 (없음)
 
 ## 로그 (최신이 위, 최대 100줄 유지)
+- 2026-08-03 16:39 KST [D4] DONE — 결정적 합성 픽스처 6종(HYPE 220봉 포함), 테스트 20개 (빌더 A)
 - 2026-08-03 16:39 KST [D3] DONE — ccxt 폴백 체인+1000봉 페이지네이션, 테스트 7개 (빌더 A)
 - 2026-08-03 16:39 KST [D2] DONE — yfinance 페처(4y, 백오프, kwargs 방어), 테스트 7개 (빌더 A)
 - 2026-08-03 16:39 KST [D1] DONE — CSV 캐시(TTL·OO_SCAN_DATA_DIR), 테스트 7개 (빌더 A)
