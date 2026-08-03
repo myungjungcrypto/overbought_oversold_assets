@@ -7,31 +7,31 @@ assets:
     asset_class: crypto
     source: ccxt
     symbol: BTC/USDT
-    exchanges: [binance, bybit, gateio, okx]
+    exchanges: [binance, bybit, gate, okx]
   - id: ETH
     name_ko: 이더리움
     asset_class: crypto
     source: ccxt
     symbol: ETH/USDT
-    exchanges: [binance, bybit, gateio, okx]
+    exchanges: [binance, bybit, gate, okx]
   - id: SOL
     name_ko: 솔라나
     asset_class: crypto
     source: ccxt
     symbol: SOL/USDT
-    exchanges: [binance, bybit, gateio, okx]
+    exchanges: [binance, bybit, gate, okx]
   - id: BNB
     name_ko: 비앤비
     asset_class: crypto
     source: ccxt
     symbol: BNB/USDT
-    exchanges: [binance, bybit, gateio]
+    exchanges: [binance, bybit, gate]
   - id: HYPE
     name_ko: 하이퍼리퀴드
     asset_class: crypto
     source: ccxt
     symbol: HYPE/USDT
-    exchanges: [hyperliquid, bybit, gateio]
+    exchanges: [hyperliquid, bybit, gate]
     symbol_overrides:
       hyperliquid: HYPE/USDC
   # ── 주요 지수 (yfinance) ──────────────────────

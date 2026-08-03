@@ -33,6 +33,19 @@ def test_rate_display_scale() -> None:
     assert cfg.by_id("US10Y").display_scale == pytest.approx(0.1)
 
 
+def test_ccxt_exchange_ids_exist() -> None:
+    """config의 모든 거래소 ID는 설치된 ccxt에 실제로 존재해야 한다.
+
+    (P2 라이브 스모크에서 gateio→gate 개명을 실측으로 발견 — ID 부패 방지 회귀 테스트)
+    """
+    import ccxt
+
+    cfg = load_config()
+    for a in cfg.assets:
+        for ex in a.exchanges:
+            assert ex in ccxt.exchanges, f"{a.id}: ccxt에 없는 거래소 ID — {ex}"
+
+
 def _write(tmp_path: Path, text: str) -> Path:
     p = tmp_path / "assets.yaml"
     p.write_text(text, encoding="utf-8")
