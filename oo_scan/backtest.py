@@ -138,7 +138,115 @@ def backtest_asset(df: pd.DataFrame, crypto: bool, use_mfi: bool) -> list[EventS
     ]
 
 
+def _fmt_pct(v: float) -> str:
+    """수익률·적중률 퍼센트 포맷 (NaN → '-')."""
+    return "-" if pd.isna(v) else f"{v * 100:+.1f}%"
+
+
+def _fmt_hit(v: float) -> str:
+    return "-" if pd.isna(v) else f"{v * 100:.0f}%"
+
+
+def build_backtest_md(stats_by_asset: dict[str, list[EventStats]], now: pd.Timestamp) -> str:
+    """자산별 (이벤트 유형 × 호라이즌) 통계표 마크다운 리포트 (§2.6)."""
+    from oo_scan.report_md import fmt_kst
+
+    lines = [
+        "# 소외 매수 가설 백테스트",
+        "",
+        f"생성 {fmt_kst(now)} · 대상 {len(stats_by_asset)}종",
+        "",
+        "구간 진입일에 매수(과열은 공매도 관점)했을 때의 전방 21/63/126거래일 수익률을",
+        "같은 자산의 무조건부 평균(단순 보유)과 비교한다. 표본 5개 미만은 '표본 부족'.",
+        "",
+    ]
+    for asset_id, stats in stats_by_asset.items():
+        lines += [f"## {asset_id}", ""]
+        lines.append("| 이벤트 | 호라이즌 | 표본 | 평균수익률 | 적중률 | 베이스라인 | 비고 |")
+        lines.append("|---|---|---|---|---|---|---|")
+        for s in stats:
+            note = "표본 부족" if s.insufficient else ""
+            lines.append(
+                f"| {s.label} | {s.horizon}일 | {s.n_events} | {_fmt_pct(s.avg_return)} "
+                f"| {_fmt_hit(s.hit_rate)} | {_fmt_pct(s.baseline)} | {note} |"
+            )
+        lines.append("")
+    lines += ["---", "", "본 리포트는 투자 자문이 아니다.", ""]
+    return "\n".join(lines)
+
+
+def build_backtest_html(stats_by_asset: dict[str, list[EventStats]], now: pd.Timestamp) -> str:
+    """자기완결 HTML 백테스트 리포트 (외부 리소스 0, index.html과 동일 원칙)."""
+    from html import escape
+
+    from oo_scan.report_md import fmt_kst
+
+    rows_html = []
+    for asset_id, stats in stats_by_asset.items():
+        body = "".join(
+            "<tr>"
+            f"<td class='l'>{escape(s.label)}</td><td>{s.horizon}일</td><td>{s.n_events}</td>"
+            f"<td>{escape(_fmt_pct(s.avg_return))}</td><td>{escape(_fmt_hit(s.hit_rate))}</td>"
+            f"<td>{escape(_fmt_pct(s.baseline))}</td>"
+            f"<td class='l'>{'표본 부족' if s.insufficient else ''}</td></tr>"
+            for s in stats
+        )
+        rows_html.append(
+            f"<h2>{escape(asset_id)}</h2><div class='wrap'><table>"
+            "<tr><th>이벤트</th><th>호라이즌</th><th>표본</th><th>평균수익률</th>"
+            "<th>적중률</th><th>베이스라인</th><th>비고</th></tr>"
+            f"{body}</table></div>"
+        )
+    style = (
+        "body{font-family:system-ui,sans-serif;margin:24px auto;max-width:960px;padding:0 12px}"
+        "table{border-collapse:collapse;width:100%;font-size:14px}"
+        "th,td{border:1px solid #8884;padding:4px 8px;text-align:right}"
+        "th{background:#8881}.l{text-align:left}.wrap{overflow-x:auto}"
+        "@media (prefers-color-scheme: dark){body{background:#111;color:#eee}}"
+    )
+    return (
+        '<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        f"<title>소외 매수 백테스트</title><style>{style}</style></head><body>"
+        f"<h1>소외 매수 가설 백테스트</h1><p>생성 {escape(fmt_kst(now))} · "
+        f'대상 {len(stats_by_asset)}종 · <a href="index.html">온도계로 돌아가기</a></p>'
+        + "".join(rows_html)
+        + "<p>본 리포트는 투자 자문이 아니다.</p></body></html>"
+    )
+
+
 def cmd_backtest(args: argparse.Namespace) -> int:
-    """backtest 서브커맨드 — 코어(K1)만 구현된 상태의 스텁. 리포트 연결은 K2에서."""
-    print("backtest: 코어(K1) 구현 완료 — 리포트 생성은 K2에서 연결 예정")
+    """backtest 서브커맨드 — 전 자산 백테스트 후 리포트 기록 (K2)."""
+    from pathlib import Path
+
+    from oo_scan.config import load_config
+    from oo_scan.indicators import has_volume
+    from oo_scan.pipeline import _fetch_df
+
+    cfg = load_config()
+    ids = args.assets.split(",") if args.assets else None
+    stats_by_asset: dict[str, list[EventStats]] = {}
+    for asset in [a for a in cfg.assets if ids is None or a.id in ids]:
+        try:
+            df, _ = _fetch_df(asset, offline=args.offline, no_cache=False)
+            if df is None or len(df) < 200:  # 워밍업도 안 되는 자산은 제외
+                continue
+            stats_by_asset[asset.id] = backtest_asset(
+                df, asset.asset_class == "crypto", has_volume(df.get("volume"))
+            )
+        except Exception as exc:  # 자산 격리 원칙
+            print(f"백테스트 실패 {asset.id}: {exc}")
+    if not stats_by_asset:
+        print("백테스트 대상 자산 없음")
+        return 1
+    now = pd.Timestamp.now(tz="Asia/Seoul")
+    md = build_backtest_md(stats_by_asset, now)
+    html = build_backtest_html(stats_by_asset, now)
+    reports, docs = Path("reports"), Path("docs")
+    reports.mkdir(parents=True, exist_ok=True)
+    docs.mkdir(parents=True, exist_ok=True)
+    (reports / "backtest.md").write_text(md, encoding="utf-8")
+    (reports / "backtest.html").write_text(html, encoding="utf-8")
+    (docs / "backtest.html").write_text(html, encoding="utf-8")
+    print(f"기록: {reports / 'backtest.md'} 외 2건 · 대상 {len(stats_by_asset)}종")
     return 0

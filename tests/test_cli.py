@@ -40,6 +40,24 @@ def test_run_offline_empty_dir_returns_one(
     assert main(["run", "--offline", "--no-write"]) == 1
 
 
-def test_backtest_stub_returns_zero() -> None:
-    """backtest 스텁은 exit 0 (K1/K2에서 실구현)."""
-    assert main(["backtest", "--offline"]) == 0
+def test_backtest_offline_writes_reports(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """오프라인 backtest는 픽스처 자산으로 리포트 3종을 기록하고 exit 0 (K2)."""
+    monkeypatch.setenv("OO_SCAN_DATA_DIR", str(FIXTURES))
+    monkeypatch.chdir(tmp_path)
+    assert main(["backtest", "--offline", "--assets", "BTC,HYPE"]) == 0
+    assert (tmp_path / "reports" / "backtest.md").exists()
+    assert (tmp_path / "reports" / "backtest.html").exists()
+    assert (tmp_path / "docs" / "backtest.html").exists()
+    md = (tmp_path / "reports" / "backtest.md").read_text(encoding="utf-8")
+    assert "소외 진입" in md and "베이스라인" in md
+
+
+def test_backtest_offline_empty_returns_one(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """데이터가 하나도 없으면 exit 1."""
+    monkeypatch.setenv("OO_SCAN_DATA_DIR", str(tmp_path / "empty"))
+    monkeypatch.chdir(tmp_path)
+    assert main(["backtest", "--offline"]) == 1

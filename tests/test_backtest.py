@@ -250,13 +250,17 @@ def test_backtest_btc_fixture_smoke() -> None:
             assert 0.0 <= s.hit_rate <= 1.0
 
 
-# ------------------------------------------------------------ CLI 스텁
+# ------------------------------------------------------------ CLI
 
 
-def test_cmd_backtest_importable_and_returns_zero(capsys: pytest.CaptureFixture[str]) -> None:
-    """cli.py가 임포트하는 cmd_backtest가 유지되고 exit 0을 반환한다 (K2 전 스텁)."""
+def test_cmd_backtest_importable_and_empty_env_returns_one(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """cli.py가 임포트하는 cmd_backtest가 유지되고, 데이터 없으면 exit 1 (K2)."""
     from oo_scan.backtest import cmd_backtest
 
     assert callable(cmd_backtest)
-    assert main(["backtest", "--offline"]) == 0
-    assert "backtest" in capsys.readouterr().out
+    monkeypatch.setenv("OO_SCAN_DATA_DIR", str(tmp_path / "empty"))
+    monkeypatch.chdir(tmp_path)
+    assert main(["backtest", "--offline"]) == 1
+    assert "백테스트" in capsys.readouterr().out
