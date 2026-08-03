@@ -3,9 +3,9 @@
 이 파일은 AUTOPILOT.md 프로토콜의 유일한 진행 기록이다. 편집 규칙(AUTOPILOT §4.4) 외의 방식으로 수정 금지.
 
 ## 메타
-- 마지막 갱신: 2026-08-03 17:22 KST
-- 현재 마일스톤: M4·M5
-- 다음 액션: F3 최종 자가 검수
+- 마지막 갱신: 2026-08-03 17:23 KST
+- 현재 마일스톤: 완료 (M0~M5 전체 수락)
+- 다음 액션: 인간 개입 대기 목록 처리 (main 머지 → Pages 활성화)
 
 ## 노드 상태
 | ID | 작업 | 상태 | 시도 | 커밋 | 비고 |
@@ -28,25 +28,29 @@
 | L2 | 1년 수익률 백분위+드로다운 | DONE | 0 | - | 85656b4 묶음 |
 | L3 | 장기 온도 | DONE | 0 | - | 85656b4 묶음 |
 | S1 | 최종 온도·5등급 | DONE | 0 | - | 02b0da7 묶음 |
-| P1 | 파이프라인+CLI | DONE | 1 | - | 구 CLI 테스트가 라이브 페치 유발 → 오프라인으로 수정 |
-| P2 | 라이브 스모크 (soft) | WARN | 1 | - | 빌드 프록시가 금융 API 차단(403) — 실검증은 daily.yml. gate ID 버그 1건 발견·수정 |
-| H1 | 히스토리+변화 감지 | DONE | 0 | - | |
-| R1 | 마크다운 리포트 (5섹션) | DONE | 0 | - | |
-| R2 | HTML 대시보드 | DONE | 0 | - | |
-| R3 | run 통합 | DONE | 0 | - | Δ전일 컬럼 배선 포함 (V 지적 해소) |
-| A1 | daily cron workflow | DONE | 0 | - | |
-| A2 | Pages 준비 | DONE | 0 | - | |
-| A3 | push+CI 확인 (soft) | DONE | 0 | - | push 성공. gh 부재로 CI green 확인은 원격에 위임 |
-| K1 | 백테스트 코어 | DONE | 0 | - | |
-| K2 | 백테스트 리포트 | DONE | 1 | - | K1 스텁 기준 테스트 1건을 K2 의미로 갱신 |
+| P1 | 파이프라인+CLI | DONE | 1 | c9f3d6a | 구 CLI 테스트가 라이브 페치 유발 → 오프라인으로 수정 |
+| P2 | 라이브 스모크 (soft) | WARN | 1 | 6a1ff62 | 빌드 프록시가 금융 API 차단(403) — 실검증은 daily.yml. gate ID 버그 1건 발견·수정 |
+| H1 | 히스토리+변화 감지 | DONE | 0 | 9ecdfe9 | |
+| R1 | 마크다운 리포트 (5섹션) | DONE | 0 | d907c00 | |
+| R2 | HTML 대시보드 | DONE | 0 | f9ab663 | |
+| R3 | run 통합 | DONE | 0 | 579deaf | Δ전일 컬럼 배선 포함 (V 지적 해소) |
+| A1 | daily cron workflow | DONE | 0 | f314ea6 | |
+| A2 | Pages 준비 | DONE | 0 | f314ea6 | |
+| A3 | push+CI 확인 (soft) | DONE | 0 | 1c9331c | push 성공. gh 부재로 CI green 확인은 원격에 위임 |
+| K1 | 백테스트 코어 | DONE | 0 | 2aedfc1 | |
+| K2 | 백테스트 리포트 | DONE | 1 | 9e9fdcc | K1 스텁 기준 테스트 1건을 K2 의미로 갱신 |
 | F1 | 텔레그램 스텁 | DONE | 0 | 431e8a3 | |
-| F2 | README 완성 | DONE | 0 | - | |
-| F3 | 최종 자가 검수 | PENDING | 0 | - | |
+| F2 | README 완성 | DONE | 0 | 1c9331c | |
+| F3 | 최종 자가 검수 | DONE | 0 | - | §7 전 항목 통과 (164 테스트) |
 
 ## 인간 개입 대기 목록
-(없음)
+1. **main 머지**: `claude/auto-project-prompt-pkss83` → `main` (일일 크론은 기본 브랜치에서만 동작)
+2. **GitHub Pages 활성화**: Settings → Pages → Deploy from a branch → `main` / `/docs`
+3. (필요 시) Settings → Actions → Workflow permissions에서 "Read and write" 허용
+4. (선택) 텔레그램 토큰 등록 — README 부록 참조. 없어도 시스템은 완전 동작
 
 ## 로그 (최신이 위, 최대 100줄 유지)
+- 2026-08-03 17:23 KST [F3] DONE — §7 체크리스트 전 항목 통과. 빌드 완료: 32노드 전부 DONE(30)+WARN(P2)+해당없음, BLOCKED 0, 테스트 164, 커밋 25
 - 2026-08-03 17:22 KST [A3+F2] DONE — 원격 push 성공, README 완성(개요·지표·설치·사용법·Pages·백테스트·텔레그램 부록·면책)
 - 2026-08-03 17:20 KST [A1+A2] DONE — daily.yml(07:30 KST cron, skip-ci 커밋, contents:write) + .nojekyll + README Pages 절차
 - 2026-08-03 17:19 KST [K2] DONE — backtest 리포트 md+html 3파일 기록, CLI 완성. 수리 1회(스텁 기준 테스트 갱신)
