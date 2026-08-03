@@ -14,7 +14,7 @@
 | B2 | 패키지+CLI 뼈대 | DONE | 0 | 1c7b56d | |
 | B3 | 자산 config (28종) | DONE | 1 | 6bf6c8d | uv tool pytest에 의존성 없음 → python -m pytest로 통일 |
 | B4 | CI workflow | DONE | 0 | - | |
-| D1 | CSV 캐시 | PENDING | 0 | - | |
+| D1 | CSV 캐시 | DONE | 0 | - | |
 | D2 | yfinance 페처 (4y) | PENDING | 0 | - | |
 | D3 | ccxt 페처 (페이지네이션) | PENDING | 0 | - | |
 | D4 | 테스트 픽스처 | PENDING | 0 | - | |
@@ -47,6 +47,7 @@
 (없음)
 
 ## 로그 (최신이 위, 최대 100줄 유지)
+- 2026-08-03 16:39 KST [D1] DONE — CSV 캐시(TTL·OO_SCAN_DATA_DIR), 테스트 7개 (빌더 A)
 - 2026-08-03 16:07 KST [B4] DONE — ci.yml (ruff+pytest, 오프라인). M0 부트스트랩 수락 기준 전부 통과
 - 2026-08-03 16:05 KST [B3] DONE — assets.yaml 28종+config 로더+테스트 7개. pytest는 python -m pytest로 실행해야 함(uv tool 격리 환경 이슈)
 - 2026-08-03 16:00 KST [B2] DONE — oo_scan 패키지, argparse CLI(run/fetch/backtest 스텁), 테스트 3개 통과
