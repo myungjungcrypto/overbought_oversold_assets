@@ -25,7 +25,7 @@ def test_offline_scan_over_fixtures(fixture_env: None) -> None:
     ids = {r.asset.id for r in results}
     assert ids == {"BTC", "ETH", "SPX", "KOSPI", "US10Y", "HYPE"}
     assert not failures
-    assert len(skipped) == 22
+    assert len(skipped) == 29
     for r in results:
         assert -100 <= r.total <= 100 or pd.isna(r.total)
         assert r.grade in {"광기", "과열", "중립", "소외", "깊은 소외", "데이터 부족"}

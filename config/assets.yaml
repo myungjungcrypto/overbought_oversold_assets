@@ -1,4 +1,4 @@
-# 자산 유니버스 — 광기-소외 온도계 대상 28종
+# 자산 유니버스 — 광기-소외 온도계 대상 35종
 # 항목 추가/제거는 이 파일 수정만으로 반영된다. (★=추천 추가분, ✚=신흥국 ETF 기본 세트)
 assets:
   # ── 크립토 (ccxt) ─────────────────────────────
@@ -70,6 +70,16 @@ assets:
     asset_class: index
     source: yfinance
     symbol: "^SOX"
+  - id: RUT            # ★ 2026-08 추가
+    name_ko: 러셀2000 (미국 소형주)
+    asset_class: index
+    source: yfinance
+    symbol: "^RUT"
+  - id: STOXX50        # ★ 2026-08 추가
+    name_ko: 유로스톡스50 (유럽)
+    asset_class: index
+    source: yfinance
+    symbol: "^STOXX50E"
   # ── 신흥국 지수 ETF (yfinance) ─────────────────
   - id: EEM            # ✚
     name_ko: 신흥국 전체 (MSCI EM)
@@ -101,6 +111,22 @@ assets:
     asset_class: em_index
     source: yfinance
     symbol: EWT
+  # ── 채권·부동산 (yfinance) ─────────────────────
+  - id: TLT            # ★ 2026-08 추가
+    name_ko: 미국 장기채 (20년+)
+    asset_class: bond
+    source: yfinance
+    symbol: TLT
+  - id: HYG            # ★ 2026-08 추가
+    name_ko: 미국 하이일드 채권
+    asset_class: bond
+    source: yfinance
+    symbol: HYG
+  - id: VNQ            # ★ 2026-08 추가
+    name_ko: 미국 리츠
+    asset_class: reit
+    source: yfinance
+    symbol: VNQ
   # ── 금리 (yfinance) ───────────────────────────
   # 주의: yfinance 1.x는 ^TNX/^TYX를 % 값 그대로 반환한다 (과거의 x10 스케일 아님).
   # 2026-08-03 Actions 실측으로 확인 — display_scale을 두지 않는다.
@@ -137,6 +163,16 @@ assets:
     asset_class: commodity
     source: yfinance
     symbol: "CL=F"
+  - id: NATGAS         # ★ 2026-08 추가
+    name_ko: 천연가스
+    asset_class: commodity
+    source: yfinance
+    symbol: "NG=F"
+  - id: DBA            # ★ 2026-08 추가
+    name_ko: 농산물 바스켓
+    asset_class: commodity
+    source: yfinance
+    symbol: DBA
   # ── 환율 (yfinance) ───────────────────────────
   - id: DXY
     name_ko: 달러인덱스
