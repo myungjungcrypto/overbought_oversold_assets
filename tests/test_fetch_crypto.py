@@ -180,6 +180,54 @@ def test_stuck_exchange_terminates(capsys: pytest.CaptureFixture[str]) -> None:
     assert df.index.is_unique
 
 
+def test_stalled_pagination_merges_latest_page() -> None:
+    """gate처럼 2페이지째를 안 주는 거래소는 최신 구간을 병합해 신선도를 보정한다.
+
+    (2026-08-03 Actions 실측 버그의 회귀 테스트: 첫 1000봉 이후 빈 응답 → 15개월 STALE)
+    """
+    now_ms = int(time.time() * 1000)
+    base_old = now_ms - 1460 * _DAY_MS
+
+    def candle(ts: int, close: float) -> list[float]:
+        return [ts, 1.0, 2.0, 0.5, close, 7.0]
+
+    class GateLikeExchange:
+        """since 첫 요청엔 옛 1000봉만 주고 그 후 빈 응답, since 없으면 최신 1000봉."""
+
+        def __init__(self) -> None:
+            self.calls: list[int | None] = []
+            self.served_first = False
+
+        def fetch_ohlcv(
+            self, symbol: str, timeframe: str = "1d", since: int | None = None, limit: int = 1000
+        ) -> list[list[float]]:
+            self.calls.append(since)
+            if since is None:  # 최신 구간 요청
+                start = now_ms - (limit - 1) * _DAY_MS
+                return [candle(start + k * _DAY_MS, 200.0 + k) for k in range(limit)]
+            if not self.served_first:  # 첫 since 페이지만 제공
+                self.served_first = True
+                return [candle(base_old + k * _DAY_MS, 100.0 + k) for k in range(1000)]
+            return []  # 이후 페이지는 침묵 (실측 재현)
+
+    gate = GateLikeExchange()
+    df, _ = fetch_ccxt(
+        _asset(exchanges=("gate",)), days=1460, exchange_factory=lambda eid: gate
+    )
+    assert None in gate.calls  # 최신 병합 호출이 실제로 일어났다
+    last_ts = df.index[-1]
+    assert (pd.Timestamp(now_ms, unit="ms") - last_ts).days <= 2  # 신선도 회복
+    assert len(df) > 1000  # 과거 페이지 + 최신 페이지 병합
+    assert df.index.is_unique and df.index.is_monotonic_increasing
+
+
+def test_fresh_pagination_skips_latest_merge() -> None:
+    """데이터가 이미 신선하면 추가(최신 병합) 호출을 하지 않는다."""
+    fake = FakeExchange(total=300)
+    fetch_ccxt(_asset(exchanges=("binance",)), days=300, exchange_factory=lambda eid: fake)
+    assert all(c[2] is not None for c in fake.calls)  # since 없는 호출 없음
+
+
 def test_page_boundary_duplicate_keeps_last() -> None:
     """페이지 경계에서 겹친 캔들(갱신된 부분 캔들)은 나중 페이지 값이 이긴다."""
     base = int(time.time() * 1000) - 1200 * _DAY_MS
