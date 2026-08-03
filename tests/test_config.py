@@ -7,10 +7,10 @@ import pytest
 from oo_scan.config import ASSET_CLASS_LABELS_KO, ConfigError, load_config
 
 
-def test_real_config_loads_28_assets() -> None:
-    """실제 assets.yaml은 28종이고 자산군이 전부 라벨에 존재한다."""
+def test_real_config_loads_35_assets() -> None:
+    """실제 assets.yaml은 35종이고 자산군이 전부 라벨에 존재한다."""
     cfg = load_config()
-    assert len(cfg.assets) == 28
+    assert len(cfg.assets) == 35
     ids = [a.id for a in cfg.assets]
     assert len(ids) == len(set(ids))
     for a in cfg.assets:

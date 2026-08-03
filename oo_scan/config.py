@@ -8,13 +8,17 @@ from pathlib import Path
 import yaml
 
 SUPPORTED_SOURCES = {"ccxt", "yfinance"}
-SUPPORTED_CLASSES = {"crypto", "index", "em_index", "rate", "commodity", "fx", "vol"}
+SUPPORTED_CLASSES = {
+    "crypto", "index", "em_index", "bond", "reit", "rate", "commodity", "fx", "vol",
+}
 
 # 리포트 그룹핑용 자산군 한글 라벨 (표시 순서 고정)
 ASSET_CLASS_LABELS_KO: dict[str, str] = {
     "crypto": "크립토",
     "index": "주요 지수",
     "em_index": "신흥국 지수",
+    "bond": "채권",
+    "reit": "부동산",
     "rate": "금리",
     "commodity": "원자재",
     "fx": "환율",
