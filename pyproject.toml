@@ -1,0 +1,13 @@
+[project]
+name = "oo-scan"
+version = "0.1.0"
+description = "크로스에셋 광기-소외 온도계 (자산배분 관점의 과매수/과매도 모니터링)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
