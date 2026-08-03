@@ -3,9 +3,9 @@
 이 파일은 AUTOPILOT.md 프로토콜의 유일한 진행 기록이다. 편집 규칙(AUTOPILOT §4.4) 외의 방식으로 수정 금지.
 
 ## 메타
-- 마지막 갱신: 2026-08-03 17:20 KST
+- 마지막 갱신: 2026-08-03 17:22 KST
 - 현재 마일스톤: M4·M5
-- 다음 액션: K2 → A1·A2 → A3 → F2 → F3
+- 다음 액션: F3 최종 자가 검수
 
 ## 노드 상태
 | ID | 작업 | 상태 | 시도 | 커밋 | 비고 |
@@ -36,17 +36,18 @@
 | R3 | run 통합 | DONE | 0 | - | Δ전일 컬럼 배선 포함 (V 지적 해소) |
 | A1 | daily cron workflow | DONE | 0 | - | |
 | A2 | Pages 준비 | DONE | 0 | - | |
-| A3 | push+CI 확인 (soft) | PENDING | 0 | - | |
+| A3 | push+CI 확인 (soft) | DONE | 0 | - | push 성공. gh 부재로 CI green 확인은 원격에 위임 |
 | K1 | 백테스트 코어 | DONE | 0 | - | |
 | K2 | 백테스트 리포트 | DONE | 1 | - | K1 스텁 기준 테스트 1건을 K2 의미로 갱신 |
 | F1 | 텔레그램 스텁 | DONE | 0 | 431e8a3 | |
-| F2 | README 완성 | PENDING | 0 | - | |
+| F2 | README 완성 | DONE | 0 | - | |
 | F3 | 최종 자가 검수 | PENDING | 0 | - | |
 
 ## 인간 개입 대기 목록
 (없음)
 
 ## 로그 (최신이 위, 최대 100줄 유지)
+- 2026-08-03 17:22 KST [A3+F2] DONE — 원격 push 성공, README 완성(개요·지표·설치·사용법·Pages·백테스트·텔레그램 부록·면책)
 - 2026-08-03 17:20 KST [A1+A2] DONE — daily.yml(07:30 KST cron, skip-ci 커밋, contents:write) + .nojekyll + README Pages 절차
 - 2026-08-03 17:19 KST [K2] DONE — backtest 리포트 md+html 3파일 기록, CLI 완성. 수리 1회(스텁 기준 테스트 갱신)
 - 2026-08-03 17:17 KST [R3] DONE — run이 리포트 5종+history 기록, Δ전일 컬럼 배선, 테스트 3개 추가 (163 green). 픽스처 기반 초기 리포트 커밋(첫 실데이터 실행 시 교체됨)
