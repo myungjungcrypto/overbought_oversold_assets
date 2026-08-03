@@ -12,21 +12,26 @@
 |----|------|------|------|------|------|
 | B1 | 리포 스캐폴드 | PENDING | 0 | - | |
 | B2 | 패키지+CLI 뼈대 | PENDING | 0 | - | |
-| B3 | 자산 config | PENDING | 0 | - | |
+| B3 | 자산 config (28종) | PENDING | 0 | - | |
 | B4 | CI workflow | PENDING | 0 | - | |
 | D1 | CSV 캐시 | PENDING | 0 | - | |
-| D2 | yfinance 페처 | PENDING | 0 | - | |
-| D3 | ccxt 페처 | PENDING | 0 | - | |
+| D2 | yfinance 페처 (4y) | PENDING | 0 | - | |
+| D3 | ccxt 페처 (페이지네이션) | PENDING | 0 | - | |
 | D4 | 테스트 픽스처 | PENDING | 0 | - | |
 | I1 | RSI | PENDING | 0 | - | |
 | I2 | Stoch+W%R | PENDING | 0 | - | |
-| I3 | %B+CCI+이격도 | PENDING | 0 | - | |
+| I3 | %B+CCI+이격도20 | PENDING | 0 | - | |
 | I4 | MFI | PENDING | 0 | - | |
 | I5 | 주봉 리샘플 | PENDING | 0 | - | |
-| I6 | 종합점수·등급 | PENDING | 0 | - | |
+| I6 | 단기 온도 | PENDING | 0 | - | |
+| L1 | 이격도200 백분위+레인지 위치 | PENDING | 0 | - | |
+| L2 | 1년 수익률 백분위+드로다운 | PENDING | 0 | - | |
+| L3 | 장기 온도 | PENDING | 0 | - | |
+| S1 | 최종 온도·5등급 | PENDING | 0 | - | |
 | P1 | 파이프라인+CLI | PENDING | 0 | - | |
 | P2 | 라이브 스모크 (soft) | PENDING | 0 | - | |
-| R1 | 마크다운 리포트 | PENDING | 0 | - | |
+| H1 | 히스토리+변화 감지 | PENDING | 0 | - | |
+| R1 | 마크다운 리포트 (5섹션) | PENDING | 0 | - | |
 | R2 | HTML 대시보드 | PENDING | 0 | - | |
 | R3 | run 통합 | PENDING | 0 | - | |
 | A1 | daily cron workflow | PENDING | 0 | - | |
