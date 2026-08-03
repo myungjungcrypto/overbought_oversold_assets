@@ -28,9 +28,11 @@ def test_real_config_hype_fallback_and_em_group() -> None:
 
 
 def test_rate_display_scale() -> None:
-    """^TNX는 display_scale 0.1이 적용돼 있다."""
+    """^TNX는 % 원값 그대로 표시한다 (yfinance 1.x 실측 — x10 스케일 아님)."""
     cfg = load_config()
-    assert cfg.by_id("US10Y").display_scale == pytest.approx(0.1)
+    us10y = cfg.by_id("US10Y")
+    assert us10y.display_scale == pytest.approx(1.0)
+    assert us10y.display_unit == "%"
 
 
 def test_ccxt_exchange_ids_exist() -> None:

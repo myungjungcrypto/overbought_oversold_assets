@@ -52,6 +52,18 @@ def _paginate_ohlcv(client: Any, symbol: str, days: int) -> list[list[float]]:
         since = next_since
         if len(batch) < _PAGE_LIMIT:
             break  # 마지막 페이지
+    # 신선도 보정: 일부 거래소(gate 등)는 since 페이지네이션의 2페이지째를 주지 않아
+    # 과거 구간에서 수집이 멈춘다 (Actions 실측: gate가 첫 1000봉 이후 중단).
+    # 마지막 캔들이 2일 이상 과거면 since 없이 최신 구간을 한 번 더 받아 병합한다.
+    # (days ≤ 1460, 페이지 1000봉이므로 남은 공백은 항상 최신 1000봉 안에 들어온다.
+    #  중복 캔들은 _to_frame의 keep-last 정리에서 최신 페이지가 이긴다.)
+    if not rows or int(rows[-1][0]) < now_ms - 2 * _DAY_MS:
+        try:
+            latest = client.fetch_ohlcv(symbol, timeframe="1d", limit=_PAGE_LIMIT)
+        except Exception:
+            latest = []
+        if latest:
+            rows.extend(latest)
     return rows
 
 

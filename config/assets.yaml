@@ -102,19 +102,19 @@ assets:
     source: yfinance
     symbol: EWT
   # ── 금리 (yfinance) ───────────────────────────
+  # 주의: yfinance 1.x는 ^TNX/^TYX를 % 값 그대로 반환한다 (과거의 x10 스케일 아님).
+  # 2026-08-03 Actions 실측으로 확인 — display_scale을 두지 않는다.
   - id: US10Y
     name_ko: 미국 10년물 금리
     asset_class: rate
     source: yfinance
     symbol: "^TNX"
-    display_scale: 0.1
     display_unit: "%"
   - id: US30Y          # ★
     name_ko: 미국 30년물 금리
     asset_class: rate
     source: yfinance
     symbol: "^TYX"
-    display_scale: 0.1
     display_unit: "%"
   # ── 원자재 (yfinance) ─────────────────────────
   - id: GOLD

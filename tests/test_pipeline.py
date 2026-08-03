@@ -47,8 +47,8 @@ def test_us10y_no_volume_excludes_mfi(fixture_env: None) -> None:
     by_id = {r.asset.id: r for r in results}
     assert "mfi" not in by_id["US10Y"].short_subs
     assert "mfi" in by_id["BTC"].short_subs
-    # display_scale: ^TNX 원값의 1/10이 표시 종가
-    assert by_id["US10Y"].display_close == pytest.approx(by_id["US10Y"].close * 0.1)
+    # ^TNX는 % 원값 그대로 표시 (yfinance 1.x 실측 — display_scale 1.0)
+    assert by_id["US10Y"].display_close == pytest.approx(by_id["US10Y"].close)
 
 
 def test_stale_flag(fixture_env: None) -> None:
