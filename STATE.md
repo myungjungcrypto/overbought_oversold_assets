@@ -32,7 +32,7 @@
 | P2 | 라이브 스모크 (soft) | WARN | 1 | - | 빌드 프록시가 금융 API 차단(403) — 실검증은 daily.yml. gate ID 버그 1건 발견·수정 |
 | H1 | 히스토리+변화 감지 | DONE | 0 | - | |
 | R1 | 마크다운 리포트 (5섹션) | DONE | 0 | - | |
-| R2 | HTML 대시보드 | PENDING | 0 | - | |
+| R2 | HTML 대시보드 | DONE | 0 | - | |
 | R3 | run 통합 | PENDING | 0 | - | |
 | A1 | daily cron workflow | PENDING | 0 | - | |
 | A2 | Pages 준비 | PENDING | 0 | - | |
@@ -47,6 +47,7 @@
 (없음)
 
 ## 로그 (최신이 위, 최대 100줄 유지)
+- 2026-08-03 17:14 KST [R2] DONE — 자기완결 HTML(요약 카드·히트맵·SVG 스파크라인), 테스트 9개 (빌더 C)
 - 2026-08-03 17:14 KST [R1] DONE — 5섹션 한국어 리포트, 테스트 13개 (빌더 C). V 지적 Δ컬럼은 R3에서 배선
 - 2026-08-03 16:48 KST [H1] DONE — history.csv upsert+등급 변화 감지(기회·경고 분류), 테스트 7개
 - 2026-08-03 16:47 KST [P2] WARN — 프록시가 yahoo/거래소 API 차단. 성과: ccxt gateio→gate 개명 버그 발견, config 수정+회귀 테스트 추가

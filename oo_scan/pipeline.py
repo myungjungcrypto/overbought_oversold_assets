@@ -41,6 +41,7 @@ class ScanResult:
     long_subs: dict[str, float] = field(default_factory=dict)
     exchange_used: str | None = None
     stale: bool = False
+    spark: list[float] = field(default_factory=list)  # 최근 60봉 종가 (HTML 스파크라인용)
 
     @property
     def display_close(self) -> float:
@@ -142,6 +143,7 @@ def scan_asset(
         long_subs=_latest_long_subs(close),
         exchange_used=exchange_used,
         stale=(ref_now - asof.normalize()).days > STALE_CALENDAR_DAYS,
+        spark=[float(v) for v in close.tail(60)],
     )
 
 
