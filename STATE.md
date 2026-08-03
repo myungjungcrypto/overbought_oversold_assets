@@ -3,16 +3,16 @@
 이 파일은 AUTOPILOT.md 프로토콜의 유일한 진행 기록이다. 편집 규칙(AUTOPILOT §4.4) 외의 방식으로 수정 금지.
 
 ## 메타
-- 마지막 갱신: 2026-08-03 16:00 KST
+- 마지막 갱신: 2026-08-03 16:05 KST
 - 현재 마일스톤: M0
-- 다음 액션: B3 시작
+- 다음 액션: B4 시작
 
 ## 노드 상태
 | ID | 작업 | 상태 | 시도 | 커밋 | 비고 |
 |----|------|------|------|------|------|
 | B1 | 리포 스캐폴드 | DONE | 1 | 223370a | debian cryptography 충돌 → --ignore-installed로 해소 |
-| B2 | 패키지+CLI 뼈대 | DONE | 0 | - | |
-| B3 | 자산 config (28종) | PENDING | 0 | - | |
+| B2 | 패키지+CLI 뼈대 | DONE | 0 | 1c7b56d | |
+| B3 | 자산 config (28종) | DONE | 1 | - | uv tool pytest에 의존성 없음 → python -m pytest로 통일 |
 | B4 | CI workflow | PENDING | 0 | - | |
 | D1 | CSV 캐시 | PENDING | 0 | - | |
 | D2 | yfinance 페처 (4y) | PENDING | 0 | - | |
@@ -47,6 +47,7 @@
 (없음)
 
 ## 로그 (최신이 위, 최대 100줄 유지)
+- 2026-08-03 16:05 KST [B3] DONE — assets.yaml 28종+config 로더+테스트 7개. pytest는 python -m pytest로 실행해야 함(uv tool 격리 환경 이슈)
 - 2026-08-03 16:00 KST [B2] DONE — oo_scan 패키지, argparse CLI(run/fetch/backtest 스텁), 테스트 3개 통과
 - 2026-08-03 15:57 KST [B1] DONE — 스캐폴드 4파일, pip 설치(cryptography 충돌 1회 수리), ruff 통과. pandas 3.0.5/yfinance 1.5.2 확인
 
