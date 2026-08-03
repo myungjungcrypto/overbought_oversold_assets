@@ -205,12 +205,24 @@ def _grouped(results: list[ScanResult]) -> list[tuple[str, list[ScanResult]]]:
     return out
 
 
-def _full_table_lines(results: list[ScanResult]) -> list[str]:
+def fmt_delta(r: ScanResult, prev_totals: dict[str, float] | None) -> str:
+    """전일(직전 기록) 대비 최종 온도 변화량. 비교 불가면 '-'."""
+    if not prev_totals or r.asset.id not in prev_totals or pd.isna(r.total):
+        return "-"
+    prev = prev_totals[r.asset.id]
+    if pd.isna(prev):
+        return "-"
+    return f"{r.total - prev:+.0f}"
+
+
+def _full_table_lines(
+    results: list[ScanResult], prev_totals: dict[str, float] | None = None
+) -> list[str]:
     """② 전체 온도계 — 자산군별 그룹 표 (모든 자산, 데이터 부족 포함)."""
     lines = ["## 전체 온도계", ""]
     if not results:
         return lines + ["산출된 자산 없음", ""]
-    header = ["자산", "종가", "기준일", "단기(일·주)", "장기", "최종", "등급", "RSI(14)"]
+    header = ["자산", "종가", "기준일", "단기(일·주)", "장기", "최종", "Δ전일", "등급", "RSI(14)"]
     for cls, group in _grouped(results):
         rows = []
         for r in group:
@@ -223,6 +235,7 @@ def _full_table_lines(results: list[ScanResult]) -> list[str]:
                     fmt_num(r.short),
                     fmt_num(r.long),
                     fmt_total(r.total),
+                    fmt_delta(r, prev_totals),
                     r.grade,
                     fmt_num(r.rsi14),
                 ]
@@ -369,6 +382,7 @@ def build_markdown_report(
     skipped: list[Asset],
     changes: list[GradeChange],
     now: pd.Timestamp,
+    prev_totals: dict[str, float] | None = None,
 ) -> str:
     """§2.5 5섹션 마크다운 리포트 전체를 문자열로 조립한다.
 
@@ -392,7 +406,7 @@ def build_markdown_report(
         *_summary_lines(results),
         "",
     ]
-    lines += _full_table_lines(results)
+    lines += _full_table_lines(results, prev_totals)
     lines += _rank_lines(results)
     lines += _zone_lines(results, hot=False)
     lines += _zone_lines(results, hot=True)

@@ -74,6 +74,25 @@ def test_detect_uses_most_recent_prior(tmp_path: Path) -> None:
     assert c.is_opportunity
 
 
+def test_previous_totals(tmp_path: Path) -> None:
+    """Δ전일용 직전 총점 맵 — 가장 최근 직전 기록, NaN 제외."""
+    from oo_scan.history import previous_totals
+
+    p = tmp_path / "history.csv"
+    upsert_history(p, "2026-08-01", [
+        {"asset_id": "BTC", "short": 0, "long": 0, "total": 10.0, "grade": "중립"},
+        {"asset_id": "HYPE", "short": None, "long": None, "total": None, "grade": "데이터 부족"},
+    ])
+    upsert_history(p, "2026-08-02", [
+        {"asset_id": "BTC", "short": 0, "long": 0, "total": 25.0, "grade": "중립"},
+    ])
+    hist = upsert_history(p, "2026-08-03", [
+        {"asset_id": "BTC", "short": 0, "long": 0, "total": 31.0, "grade": "과열"},
+    ])
+    prev = previous_totals(hist, "2026-08-03")
+    assert prev == {"BTC": 25.0}  # 최신 직전(8/2), HYPE는 NaN이라 제외
+
+
 def test_nan_scores_serialization(tmp_path: Path) -> None:
     """NaN 점수(데이터 부족)도 기록·재로드가 안전하다."""
     p = tmp_path / "history.csv"

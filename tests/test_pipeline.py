@@ -96,6 +96,47 @@ def test_cli_run_offline_no_write(fixture_env: None, capsys: pytest.CaptureFixtu
     assert "BTC" in out and "US10Y" in out
 
 
+def test_write_outputs_creates_files_and_delta(fixture_env: None, tmp_path: Path) -> None:
+    """R3: 산출물 5종+히스토리 생성, 이튿날 재실행 시 Δ전일 컬럼이 채워진다."""
+    from oo_scan.pipeline import write_outputs
+
+    cfg = load_config()
+    reports, docs = tmp_path / "reports", tmp_path / "docs"
+    results, failures, skipped = run_scan(cfg, offline=True, now=pd.Timestamp("2026-08-02"))
+    write_outputs(results, failures, skipped, now=pd.Timestamp("2026-08-02 07:30"),
+                  reports_dir=reports, docs_dir=docs)
+    for name in ["2026-08-02.md", "2026-08-02.html", "latest.md", "latest.html", "history.csv"]:
+        assert (reports / name).exists() or name == "history.csv" and (reports / name).exists()
+    assert (docs / "index.html").exists()
+    # 첫날은 직전 기록이 없어 Δ가 전부 '-'
+    day1 = (reports / "latest.md").read_text(encoding="utf-8")
+    assert "Δ전일" in day1
+    # 이튿날 실행 → Δ 숫자(+/−/+0) 등장
+    results2, f2, s2 = run_scan(cfg, offline=True, now=pd.Timestamp("2026-08-03"))
+    write_outputs(results2, f2, s2, now=pd.Timestamp("2026-08-03 07:30"),
+                  reports_dir=reports, docs_dir=docs)
+    day2 = (reports / "latest.md").read_text(encoding="utf-8")
+    import re
+
+    assert re.search(r"\| [+-]\d+ \|", day2), "Δ전일 컬럼에 부호 있는 값이 있어야 한다"
+    hist = (reports / "history.csv").read_text(encoding="utf-8")
+    assert hist.count("2026-08-02") >= 6 and hist.count("2026-08-03") >= 6
+
+
+def test_cli_run_offline_writes_files(
+    fixture_env: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """CLI 통합: --no-write 없이 실행하면 reports/·docs/가 cwd에 생성된다."""
+    monkeypatch.chdir(tmp_path)
+    rc = main(["run", "--offline"])
+    assert rc == 0
+    assert (tmp_path / "reports" / "latest.md").exists()
+    assert (tmp_path / "reports" / "history.csv").exists()
+    assert (tmp_path / "docs" / "index.html").exists()
+    assert "기록:" in capsys.readouterr().out
+
+
 def test_render_table_sorted_desc(fixture_env: None) -> None:
     """표는 최종 온도 내림차순."""
     cfg = load_config()

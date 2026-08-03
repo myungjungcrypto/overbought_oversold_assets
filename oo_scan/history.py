@@ -84,6 +84,18 @@ def upsert_history(path: Path, run_date: str, rows: list[dict]) -> pd.DataFrame:
     return out
 
 
+def previous_totals(history: pd.DataFrame, run_date: str) -> dict[str, float]:
+    """run_date 직전 기록의 자산별 최종 온도 (Δ전일 컬럼용). NaN은 제외한다."""
+    past = history[history["date"] < run_date]
+    out: dict[str, float] = {}
+    for asset_id, grp in past.groupby("asset_id"):
+        latest = grp.sort_values("date").iloc[-1]
+        total = latest["total_score"]
+        if pd.notna(total):
+            out[str(asset_id)] = float(total)
+    return out
+
+
 def detect_changes(history: pd.DataFrame, run_date: str) -> list[GradeChange]:
     """run_date의 각 자산을 직전 기록과 비교해 등급 변화를 찾는다.
 

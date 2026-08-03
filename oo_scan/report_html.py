@@ -22,6 +22,7 @@ from oo_scan.report_md import (
     change_icon,
     class_label,
     coldest_subs,
+    fmt_delta,
     duration_ko,
     fmt_close,
     fmt_kst,
@@ -178,11 +179,13 @@ def _badge(grade: str) -> str:
     return f'<span class="badge" style="background:{color}">{escape(grade)}</span>'
 
 
-def _thermo_table_html(results: list[ScanResult]) -> str:
-    """온도계 테이블 — 전 자산 최종 온도 내림차순, 히트맵 셀·스파크라인 포함."""
+def _thermo_table_html(
+    results: list[ScanResult], prev_totals: dict[str, float] | None = None
+) -> str:
+    """온도계 테이블 — 전 자산 최종 온도 내림차순, 히트맵 셀·Δ전일·스파크라인 포함."""
     head = (
         "<tr><th>자산</th><th>자산군</th><th>종가</th><th>추이(60봉)</th><th>단기</th>"
-        "<th>장기</th><th>최종</th><th>등급</th><th>기준일</th></tr>"
+        "<th>장기</th><th>최종</th><th>Δ전일</th><th>등급</th><th>기준일</th></tr>"
     )
     rows = []
     for r in sorted_by_total(results):
@@ -198,12 +201,13 @@ def _thermo_table_html(results: list[ScanResult]) -> str:
             f'<td class="l">{sparkline_svg(r.spark, accent)}</td>'
             f"<td>{fmt_num(r.short)}</td><td>{fmt_num(r.long)}</td>"
             f'<td class="heat"{heat_attr}>{fmt_total(r.total)}</td>'
+            f"<td>{escape(fmt_delta(r, prev_totals))}</td>"
             f"<td>{_badge(r.grade)}</td>"
             f"<td>{asof}</td>"
             "</tr>"
         )
     if not rows:
-        rows.append('<tr><td colspan="9" class="l">산출된 자산 없음</td></tr>')
+        rows.append('<tr><td colspan="10" class="l">산출된 자산 없음</td></tr>')
     return '<div class="wrap"><table>' + head + "".join(rows) + "</table></div>"
 
 
@@ -263,6 +267,7 @@ def build_html_report(
     skipped: list[Asset],
     changes: list[GradeChange],
     now: pd.Timestamp,
+    prev_totals: dict[str, float] | None = None,
 ) -> str:
     """단일 파일 HTML 대시보드 전체를 문자열로 조립한다 (`now` 주입으로 결정적)."""
     counts = grade_counts(results)
@@ -277,7 +282,7 @@ def build_html_report(
         "<h2>변화 감지</h2>",
         _changes_html(changes),
         "<h2>전체 온도계</h2>",
-        _thermo_table_html(results),
+        _thermo_table_html(results, prev_totals),
         "<h2>소외 존</h2>",
         _zone_html(results, hot=False),
         "<h2>광기 존</h2>",

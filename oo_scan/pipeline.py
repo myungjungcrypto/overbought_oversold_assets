@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import pandas as pd
 
@@ -207,8 +208,53 @@ def render_table(results: list[ScanResult]) -> str:
     return "\n".join(lines)
 
 
+def write_outputs(
+    results: list[ScanResult],
+    failures: list[ScanFailure],
+    skipped: list[Asset],
+    *,
+    now: pd.Timestamp,
+    reports_dir: Path = Path("reports"),
+    docs_dir: Path = Path("docs"),
+) -> list[Path]:
+    """리포트·히스토리·대시보드 파일 일체를 기록한다 (R3).
+
+    순서: history.csv upsert → 변화 감지·Δ전일 산출 → md/html 렌더 →
+    reports/YYYY-MM-DD.{md,html} + latest.{md,html} + docs/index.html.
+    """
+    from oo_scan.history import detect_changes, previous_totals, upsert_history
+    from oo_scan.report_html import build_html_report
+    from oo_scan.report_md import build_markdown_report, report_date
+
+    run_date = report_date(now)
+    rows = [
+        {"asset_id": r.asset.id, "short": r.short, "long": r.long,
+         "total": r.total, "grade": r.grade}
+        for r in results
+    ]
+    hist = upsert_history(reports_dir / "history.csv", run_date, rows)
+    changes = detect_changes(hist, run_date)
+    prev = previous_totals(hist, run_date)
+    md = build_markdown_report(results, failures, skipped, changes, now, prev)
+    html = build_html_report(results, failures, skipped, changes, now, prev)
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    for path, content in [
+        (reports_dir / f"{run_date}.md", md),
+        (reports_dir / "latest.md", md),
+        (reports_dir / f"{run_date}.html", html),
+        (reports_dir / "latest.html", html),
+        (docs_dir / "index.html", html),
+    ]:
+        path.write_text(content, encoding="utf-8")
+        written.append(path)
+    written.append(reports_dir / "history.csv")
+    return written
+
+
 def cmd_run(args: argparse.Namespace) -> int:
-    """run 서브커맨드 — 스캔 후 표 출력 (파일 기록은 R3에서 연결)."""
+    """run 서브커맨드 — 스캔 → 표 출력 → (기본) 리포트·히스토리 기록."""
     cfg = load_config()
     ids = args.assets.split(",") if args.assets else None
     results, failures, skipped = run_scan(
@@ -220,8 +266,10 @@ def cmd_run(args: argparse.Namespace) -> int:
               + ", ".join(a.id for a in skipped))
     for f in failures:
         print(f"실패 {f.asset.id}: {f.reason}", file=sys.stderr)
-    if not getattr(args, "no_write", False):
-        print("(리포트 파일 기록은 R3 노드에서 활성화된다)")
+    if not getattr(args, "no_write", False) and results:
+        now = pd.Timestamp.now(tz="Asia/Seoul")
+        for p in write_outputs(results, failures, skipped, now=now):
+            print(f"기록: {p}")
     attempted = len(results) + len(failures)
     return exit_code_for(produced=len(results), attempted=attempted, offline=args.offline)
 
