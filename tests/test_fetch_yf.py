@@ -31,6 +31,15 @@ def _yf_multiindex_frame(n: int = 10, tz: str | None = None) -> pd.DataFrame:
     return pd.DataFrame(data, index=idx, columns=cols)
 
 
+@pytest.fixture(autouse=True)
+def no_short_augment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """기본은 짧은 응답 보강을 끈다 — 기존 테스트의 호출 수·sleep 시퀀스 보존.
+
+    보강 경로 테스트는 _MIN_EXPECTED_ROWS를 직접 되살린다.
+    """
+    monkeypatch.setattr(mod, "_MIN_EXPECTED_ROWS", 0)
+
+
 @pytest.fixture()
 def sleeps(monkeypatch: pytest.MonkeyPatch) -> list[float]:
     """_sleep 호출을 기록만 하고 실제로 기다리지 않는다."""
@@ -176,3 +185,58 @@ def test_missing_volume_fills_zero_and_tz_stripped(
     df = fetch_yf("DX-Y.NYB")
     assert df.index.tz is None
     assert (df["volume"] == 0.0).all()
+
+
+def test_short_period_response_augmented_by_start(
+    monkeypatch: pytest.MonkeyPatch, sleeps: list[float]
+) -> None:
+    """period 응답이 짧으면(^TNX 회귀) start= 재요청으로 보강한다 (2026-08-13 실측 회귀 테스트)."""
+    monkeypatch.setattr(mod, "_MIN_EXPECTED_ROWS", 250)
+    short = _yf_multiindex_frame(30)
+    full = _yf_multiindex_frame(400)
+
+    def route(*a: Any, **k: Any) -> pd.DataFrame:
+        return full if "start" in k else short
+
+    calls = _patch_download(monkeypatch, route)
+    df = fetch_yf("^TNX")
+
+    assert len(df) == 400  # 보강 결과 채택
+    assert any("start" in k for k in calls)  # start= 재요청이 실제로 발생
+    assert calls[0].get("period") == "4y"
+
+
+def test_short_response_kept_when_augment_fails(
+    monkeypatch: pytest.MonkeyPatch, sleeps: list[float]
+) -> None:
+    """보강도 전부 짧으면 원본 짧은 응답을 그대로 반환한다 (등급 가드는 파이프라인 소관)."""
+    monkeypatch.setattr(mod, "_MIN_EXPECTED_ROWS", 250)
+    short = _yf_multiindex_frame(30)
+    shorter = _yf_multiindex_frame(10)
+
+    def route(*a: Any, **k: Any) -> pd.DataFrame:
+        return short if "period" in k and k["period"] == "4y" else shorter
+
+    _patch_download(monkeypatch, route)
+    df = fetch_yf("^TYX")
+    assert len(df) == 30  # 예외 없이 원본 유지
+
+
+def test_augment_trims_period_max_to_4y(
+    monkeypatch: pytest.MonkeyPatch, sleeps: list[float]
+) -> None:
+    """period=max가 수십 년치를 줘도 4y 수준(_MAX_ROWS)으로 절단한다."""
+    monkeypatch.setattr(mod, "_MIN_EXPECTED_ROWS", 250)
+    short = _yf_multiindex_frame(30)
+    huge = _yf_multiindex_frame(3000)
+
+    def route(*a: Any, **k: Any) -> pd.DataFrame:
+        if k.get("period") == "max":
+            return huge
+        if "start" in k:
+            return _yf_multiindex_frame(5)
+        return short
+
+    _patch_download(monkeypatch, route)
+    df = fetch_yf("^TNX")
+    assert len(df) == mod._MAX_ROWS
