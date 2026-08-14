@@ -2,10 +2,13 @@
 
 §6 리스크 대응: 단일 티커 호출 + auto_adjust 명시 + MultiIndex 평탄화,
 호출 전 sleep 0.7s, 실패(예외·빈 응답) 시 1s→2s→4s 백오프로 최대 3회 재시도.
+period 응답이 비정상적으로 짧으면(yfinance 1.6.0의 ^TNX/^TYX 회귀 실측)
+start=·period=max 방식으로 재요청해 가장 긴 결과를 쓴다.
 """
 
 from __future__ import annotations
 
+import sys
 import time
 
 import pandas as pd
@@ -27,16 +30,23 @@ _RETRY_DELAYS: tuple[float, ...] = (1.0, 2.0, 4.0)
 # volume은 없으면 0으로 채우므로 필수 목록에서 제외
 _REQUIRED_COLUMNS = ("open", "high", "low", "close")
 
+# 4y 요청 응답이 이보다 짧으면 요청 방식을 바꿔 보강한다 (2026-08-13 ^TNX 회귀 대응)
+_MIN_EXPECTED_ROWS = 250
 
-def _download(symbol: str, period: str) -> pd.DataFrame | None:
+# 보강 결과 상한 봉 수 (period=max가 수십 년치를 줄 때 4y 수준으로 절단)
+_MAX_ROWS = 1460
+
+
+def _download(
+    symbol: str, *, period: str | None = None, start: str | None = None
+) -> pd.DataFrame | None:
     """yf.download 1회 호출. 버전 차이로 선택 kwargs가 거부되면(TypeError) 빼고 재호출."""
+    rng: dict[str, str] = {"period": period} if period is not None else {"start": start or ""}
     try:
-        return yf.download(
-            symbol, period=period, interval="1d", auto_adjust=False, progress=False
-        )
+        return yf.download(symbol, interval="1d", auto_adjust=False, progress=False, **rng)
     except TypeError:
         # yfinance 1.x 방어: 선택 kwargs(auto_adjust/progress)가 사라진 경우 최소 인자로
-        return yf.download(symbol, period=period, interval="1d")
+        return yf.download(symbol, interval="1d", **rng)
 
 
 def _flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -78,10 +88,39 @@ def _normalize(df: pd.DataFrame) -> pd.DataFrame:
     return normalize_ohlcv(out)
 
 
+def _augment_short_response(symbol: str, df: pd.DataFrame) -> pd.DataFrame:
+    """period 응답이 비정상적으로 짧을 때 start=·period=max로 재요청해 보강한다.
+
+    yfinance 1.6.0에서 ^TNX/^TYX가 period="4y" 요청에 수십 봉만 돌려주는 회귀 실측
+    (2026-08-13) 대응. 가장 긴 결과를 4y 수준(_MAX_ROWS)으로 절단해 반환하며,
+    전부 실패하면 원본을 그대로 쓴다 (등급 가드는 파이프라인이 담당).
+    """
+    best = df
+    start = (pd.Timestamp.now() - pd.Timedelta(days=_MAX_ROWS)).strftime("%Y-%m-%d")
+    for rng in ({"start": start}, {"period": "max"}):
+        _sleep(_PRE_CALL_SLEEP)
+        try:
+            raw = _download(symbol, **rng)
+            if raw is None or raw.empty:
+                continue
+            cand = _normalize(raw).tail(_MAX_ROWS)
+        except Exception:
+            continue
+        if len(cand) > len(best):
+            best = cand
+    if len(best) > len(df):
+        print(
+            f"[fetch_yf] {symbol}: period 응답 {len(df)}봉 → 보강 {len(best)}봉",
+            file=sys.stderr,
+        )
+    return best
+
+
 def fetch_yf(symbol: str, period: str = "4y") -> pd.DataFrame:
     """야후 파이낸스에서 일봉 OHLCV를 받아 계약 프레임으로 반환한다.
 
     호출 전마다 0.7s 대기하고, 예외·빈 응답은 1s→2s→4s 지수 백오프로 재시도한다.
+    성공했지만 봉 수가 _MIN_EXPECTED_ROWS 미만이면 요청 방식을 바꿔 보강을 시도한다.
     끝내 실패하면 FetchError.
     """
     last_error = "빈 응답"
@@ -90,7 +129,7 @@ def fetch_yf(symbol: str, period: str = "4y") -> pd.DataFrame:
             _sleep(_RETRY_DELAYS[attempt - 1])
         _sleep(_PRE_CALL_SLEEP)
         try:
-            raw = _download(symbol, period)
+            raw = _download(symbol, period=period)
         except Exception as exc:  # 네트워크·파서 등 어떤 실패든 재시도 대상
             last_error = f"{type(exc).__name__}: {exc}"
             continue
@@ -103,6 +142,8 @@ def fetch_yf(symbol: str, period: str = "4y") -> pd.DataFrame:
             last_error = f"{type(exc).__name__}: {exc}"
             continue
         if not df.empty:
+            if len(df) < _MIN_EXPECTED_ROWS:
+                return _augment_short_response(symbol, df)
             return df
         last_error = "정규화 후 빈 데이터"
     raise FetchError(f"yfinance 수집 실패 — {symbol} ({last_error})")
