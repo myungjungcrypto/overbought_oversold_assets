@@ -6,7 +6,7 @@ on:
       script:
         description: "실행할 scripts/ 파이썬 파일명"
         required: true
-        default: "analyze_krw.py"
+        default: "analyze_krw2.py"
   push:
     branches: [main]
     paths: ["scripts/analyze_*.py"]  # 분석 스크립트 푸시로도 트리거 (봇 권한 우회)
@@ -21,4 +21,4 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - run: python "scripts/${{ github.event.inputs.script || 'analyze_krw.py' }}"
+      - run: python "scripts/${{ github.event.inputs.script || 'analyze_krw2.py' }}"
