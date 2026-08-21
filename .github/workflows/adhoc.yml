@@ -1,0 +1,21 @@
+# 애드혹 분석 실행기 — 수동 전용. 결과는 로그로만 남기고 저장소에 아무것도 쓰지 않는다.
+name: Adhoc Analysis
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: "실행할 scripts/ 파이썬 파일명"
+        required: true
+        default: "analyze_krw.py"
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python "scripts/${{ inputs.script }}"
